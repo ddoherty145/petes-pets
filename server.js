@@ -17,8 +17,8 @@ const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/local', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  useCreateIndex: true,
-  useFindAndModify: false
+  // useCreateIndex: true,
+  // useFindAndModify: false
 });
 
 // view engine setup
