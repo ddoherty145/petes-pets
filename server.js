@@ -14,12 +14,11 @@ const methodOverride = require('method-override')
 const app = express();
 
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/local', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  // useCreateIndex: true,
-  // useFindAndModify: false
-});
+
+// Only connect to MongoDB if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  mongoose.connect('mongodb://localhost/local');
+}
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

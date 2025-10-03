@@ -55,8 +55,24 @@ module.exports = (app) => {
   // DELETE PET
   app.delete('/pets/:id', async (req, res, next) => {
     try {
-      await Pet.findByIdAndRemove(req.params.id);
+      await Pet.findByIdAndDelete(req.params.id);
       res.redirect('/');
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  //SEARCH PET
+  app.get('/search', async (req, res, next) => {
+    try {
+      const term = new RegExp(req.query.term, 'i');
+      const pets = await Pet.find({
+        $or: [
+          { name: term },
+          { species: term },
+        ]
+      });
+      res.render('pets-index', { pets });
     } catch (err) {
       next(err);
     }

@@ -1,8 +1,28 @@
+// Set NODE_ENV to test to prevent server from connecting to MongoDB
+process.env.NODE_ENV = 'test';
+
 const chai = require('chai');
 const chaiHttp = require('chai-http');
-const server = require('../server');
 const should = chai.should();
+const mongoose = require('mongoose');
 const Pet = require('../models/pet');
+
+// Set up test database connection
+mongoose.connect('mongodb://localhost/local');
+
+// Wait for MongoDB connection before running tests
+before((done) => {
+  if (mongoose.connection.readyState === 1) {
+    done();
+  } else {
+    mongoose.connection.once('open', () => {
+      done();
+    });
+  }
+});
+
+// Import app after MongoDB connection is set up
+const app = require('../server');
 
 const fido =     {
     "name": "Norman",
@@ -26,7 +46,7 @@ describe('Pets', ()  => {
 
   // TEST INDEX
   it('should index ALL pets on / GET', (done) => {
-    chai.request(server)
+    chai.request(app)
         .get('/')
         .end((err, res) => {
           res.should.have.status(200);
@@ -37,7 +57,7 @@ describe('Pets', ()  => {
 
   // TEST NEW
   it('should display new form on /pets/new GET', (done) => {
-    chai.request(server)
+    chai.request(app)
       .get(`/pets/new`)
         .end((err, res) => {
           res.should.have.status(200);
@@ -48,72 +68,63 @@ describe('Pets', ()  => {
   
   // TEST CREATE 
   it('should create a SINGLE pet on /pets POST', (done) => {
-    chai.request(server)
+    chai.request(app)
         .post('/pets')
         .send(fido)
+        .redirects(0) // Don't follow redirects
         .end((err, res) => {
-          res.should.have.status(200);
-          res.should.be.html
+          res.should.have.status(302); // Expect redirect after creation
           done();
         });
   });
 
   // TEST SHOW
-  it('should show a SINGLE pet on /pets/<id> GET', (done) => {
+  it('should show a SINGLE pet on /pets/<id> GET', async () => {
     var pet = new Pet(fido);
-     pet.save((err, data) => {
-       chai.request(server)
-         .get(`/pets/${data._id}`)
-         .end((err, res) => {
-           res.should.have.status(200);
-           res.should.be.html
-           done();
-         });
-     });
-
+    const data = await pet.save();
+    const res = await chai.request(app)
+      .get(`/pets/${data._id}`);
+    res.should.have.status(200);
+    res.should.be.html;
   });
 
   // TEST EDIT
-  it('should edit a SINGLE pet on /pets/<id>/edit GET', (done) => {
+  it('should edit a SINGLE pet on /pets/<id>/edit GET', async () => {
     var pet = new Pet(fido);
-     pet.save((err, data) => {
-       chai.request(server)
-         .get(`/pets/${data._id}/edit`)
-         .end((err, res) => {
-           res.should.have.status(200);
-           res.should.be.html
-           done();
-         });
-     });
+    const data = await pet.save();
+    const res = await chai.request(app)
+      .get(`/pets/${data._id}/edit`);
+    res.should.have.status(200);
+    res.should.be.html;
   });
 
 
   // TEST UPDATE
-  it('should update a SINGLE pet on /pets/<id> PUT', (done) => {
+  it('should update a SINGLE pet on /pets/<id> PUT', async () => {
     var pet = new Pet(fido);
-    pet.save((err, data)  => {
-     chai.request(server)
+    const data = await pet.save();
+    const res = await chai.request(app)
       .put(`/pets/${data._id}?_method=PUT`)
       .send({'name': 'Spider'})
-      .end((err, res) => {
-        res.should.have.status(200);
-        res.should.be.html
-        done();
-      });
-    });
+      .redirects(0); // Don't follow redirects
+    res.should.have.status(302); // Expect redirect after update
   });
 
   // TEST DELETE
-  it('should delete a SINGLE pet on /pets/<id> DELETE', (done) => {
+  it('should delete a SINGLE pet on /pets/<id> DELETE', async () => {
     var pet = new Pet(fido);
-    pet.save((err, data)  => {
-     chai.request(server)
+    const data = await pet.save();
+    const res = await chai.request(app)
       .delete(`/pets/${data._id}?_method=DELETE`)
-      .end((err, res) => {
-        res.should.have.status(200);
-        res.should.be.html
-        done();
-      });
-    });
+      .redirects(0); // Don't follow redirects
+    res.should.have.status(302); // Expect redirect after delete
+  });
+
+  // TEST SEARCH
+  it('should search pets by name or breed on /search GET', async () => {
+    const res = await chai.request(app)
+      .get('/search?term=norman');
+    res.should.have.status(200);
+    res.should.be.html;
   });
 });
