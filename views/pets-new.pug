@@ -1,30 +1,30 @@
 extends layout
 
 block content
-    
-  .row.justify-content-center
-    .col-sm-6
-      legend New Pet
-      form(action="/pets", method="post")
-        .form-group
-            label Name
-            input.form-control(name="name")
-        .form-group
-            label Birthday
-            input.form-control(name="birthday")
-        .form-group
-            label Species
-            input.form-control(name="species")
-        .form-group
-            label Rectangular Image URL
-            input.form-control(name="picUrl") 
-        .form-group
-            label Square Image URL
-            input.form-control(name="picUrlSq")   
-        .form-group
-            label Favorite Food
-            input.form-control(name="favoriteFood") 
-        .form-group
-            label Description
-            textarea.form-control(name="description")   
-        button(type="submit").btn.btn-primary Save
+  .container
+    h1 Add a New Pet
+    form#new-pet(action='/pets', method='POST')
+      .form-group
+        label Name*
+        input.form-control(name='name', required)
+      .form-group
+        label Birthday*
+        input.form-control(name='birthday', type='date', required)
+      .form-group
+        label Species*
+        input.form-control(name='species', required)
+      .form-group
+        label Rectangular Image URL*
+        input.form-control(name='picUrl', type='url', required)
+      .form-group
+        label Square Image URL*
+        input.form-control(name='picUrlSq', type='url', required)
+      .form-group
+        label Favorite Food*
+        input.form-control(name='favoriteFood', required)
+      .form-group
+        label Description* (minimum 140 characters)
+        textarea.form-control(name='description', required, minlength='140')
+      button.btn.btn-primary(type='submit') Save Pet
+    style.
+      label::after { content: '*'; color: red; margin-left: 4px; }

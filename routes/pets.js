@@ -12,14 +12,15 @@ module.exports = (app) => {
   });
 
   // CREATE PET
-  app.post('/pets', async (req, res, next) => {
-    try {
-      const pet = new Pet(req.body);
-      await pet.save();
-      res.redirect(`/pets/${pet._id}`);
-    } catch (err) {
-      next(err);
-    }
+  app.post('/pets', (req, res) => {
+    const pet = new Pet(req.body);
+    pet.save()
+      .then((savedPet) => {
+        res.status(201).json({ pet: savedPet });
+      })
+      .catch((err) => {
+        res.status(400).json({ errors: err.errors });
+      });
   });
 
   // SHOW PET

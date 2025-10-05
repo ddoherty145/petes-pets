@@ -24,14 +24,14 @@ before((done) => {
 // Import app after MongoDB connection is set up
 const app = require('../server');
 
-const fido =     {
+const fido = {
     "name": "Norman",
     "species": "Greyhound",
     "birthday": "2008-11-11",
     "favoriteFood": "Liver",
-    "picUrl": "http://www.gpamass.com/s/img/emotionheader713297504.jpg",
-    "picUrlSq": "https://www.collinsdictionary.com/images/thumb/greyhound_21701074_250.jpg",
-    "description": "Fido is a dog and he's a good dog who loves to play and hang out with his owners. He also likes to nap and enjoys eating dog food"
+    "picUrl": "https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&h=300&fit=crop",
+    "picUrlSq": "https://images.unsplash.com/photo-1552053831-71594a27632d?w=250&h=250&fit=crop",
+    "description": "Norman is a wonderful Greyhound who loves to play and hang out with his owners. He enjoys long walks in the park, playing fetch with his favorite toys, and taking naps in the sunshine. Norman is very friendly with children and other dogs, making him the perfect family pet. He has a gentle temperament and loves belly rubs."
 }
 
 chai.use(chaiHttp);
@@ -71,9 +71,10 @@ describe('Pets', ()  => {
     chai.request(app)
         .post('/pets')
         .send(fido)
-        .redirects(0) // Don't follow redirects
         .end((err, res) => {
-          res.should.have.status(302); // Expect redirect after creation
+          res.should.have.status(201); // Expect JSON response after creation
+          res.body.should.have.property('pet');
+          res.body.pet.should.have.property('_id');
           done();
         });
   });
@@ -150,5 +151,49 @@ describe('Pets', ()  => {
         res.should.be.html;
         done();
       });
+  });
+
+  // Test POST /pets validation
+  describe('POST /pets', () => {
+    it('should create a pet with valid data', (done) => {
+      const validPet = {
+        name: 'Rex',
+        species: 'Dog',
+        birthday: '2020-01-01',
+        picUrl: 'https://example.com/rex.jpg',
+        picUrlSq: 'https://example.com/rex-square.jpg',
+        favoriteFood: 'Chicken',
+        description: 'A friendly dog with a wagging tail and a love for adventure.'.padEnd(140, ' ')
+      };
+      chai.request(app)
+        .post('/pets')
+        .send(validPet)
+        .end((err, res) => {
+          should.not.exist(err);
+          res.should.have.status(201);
+          res.body.should.have.property('pet');
+          res.body.pet.should.have.property('_id');
+          done();
+        });
+    });
+
+    it('should reject invalid pet data', (done) => {
+      const invalidPet = {
+        name: '',
+        species: 'Dog',
+        description: 'Short'
+      };
+      chai.request(app)
+        .post('/pets')
+        .send(invalidPet)
+        .end((err, res) => {
+          should.not.exist(err);
+          res.should.have.status(400);
+          res.body.should.have.property('errors');
+          res.body.errors.should.have.property('name').with.property('message', 'Name is required');
+          res.body.errors.should.have.property('description').with.property('message', 'Description must be at least 140 characters');
+          done();
+        });
+    });
   });
 });
