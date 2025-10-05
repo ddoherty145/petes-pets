@@ -15,6 +15,7 @@
     "express": "^4.16.4",
     "method-override": "^2.3.10",
     "mongoose": "^8.19.0",
+    "mongoose-paginate-v2": "^1.9.1",
     "morgan": "^1.9.1",
     "pug": "^3.0.1",
     "serve-favicon": "~2.4.5",

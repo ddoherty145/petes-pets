@@ -127,4 +127,28 @@ describe('Pets', ()  => {
     res.should.have.status(200);
     res.should.be.html;
   });
+
+  // Test home route pagination
+  it('should return paginated pets on / GET', (done) => {
+    chai.request(app)
+      .get('/?page=1')
+      .end((err, res) => {
+        should.not.exist(err);
+        res.should.have.status(200);
+        res.should.be.html;
+        done();
+      });
+  });
+
+  // Test search route pagination
+  it('should return paginated search results on /search GET', (done) => {
+    chai.request(app)
+      .get('/search?term=poodle&page=1')
+      .end((err, res) => {
+        should.not.exist(err);
+        res.should.have.status(200);
+        res.should.be.html;
+        done();
+      });
+  });
 });

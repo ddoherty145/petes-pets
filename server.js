@@ -37,7 +37,7 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 
 
-require('./routes/index.js')(app);
+app.use('/', require('./routes/index.js'));
 require('./routes/pets.js')(app);
 
 // catch 404 and forward to error handler

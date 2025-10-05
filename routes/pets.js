@@ -63,18 +63,27 @@ module.exports = (app) => {
   });
 
   //SEARCH PET
-  app.get('/search', async (req, res, next) => {
-    try {
-      const term = new RegExp(req.query.term, 'i');
-      const pets = await Pet.find({
-        $or: [
-          { name: term },
-          { species: term },
-        ]
+  app.get('/search', (req, res) => {
+    const term = req.query.term ? new RegExp(req.query.term, 'i') : null;
+    const page = parseInt(req.query.page) || 1;
+  
+    const query = term ? {
+      $or: [
+        { name: term },
+        { species: term }
+      ]
+    } : {};
+  
+    Pet.paginate(query, { page, limit: 10 }).then((results) => {
+      res.render('pets-index', {
+        pets: results.docs,
+        pagesCount: results.pages,
+        currentPage: page,
+        term: req.query.term || '' // Pass term for URL construction
       });
-      res.render('pets-index', { pets });
-    } catch (err) {
-      next(err);
-    }
+    }).catch((err) => {
+      console.error(err);
+      res.status(500).send('Server Error');
+    });
   });
 }
