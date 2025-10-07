@@ -34,4 +34,37 @@ const PetSchema = new Schema({
 
 PetSchema.plugin(mongoosePaginate);
 
+// Pre-remove middleware to delete S3 files when pet is deleted
+PetSchema.pre('findOneAndDelete', async function() {
+  const pet = await this.model.findOne(this.getQuery());
+  if (pet) {
+    const { deleteFromS3 } = require('../config/s3');
+    
+    // Extract S3 key from URL
+    const extractS3Key = (url) => {
+      if (url && url.includes('.amazonaws.com/')) {
+        return url.split('.amazonaws.com/')[1];
+      }
+      return null;
+    };
+    
+    try {
+      // Delete rectangular image
+      const picUrlKey = extractS3Key(pet.picUrl);
+      if (picUrlKey) {
+        await deleteFromS3(picUrlKey);
+      }
+      
+      // Delete square image
+      const picUrlSqKey = extractS3Key(pet.picUrlSq);
+      if (picUrlSqKey) {
+        await deleteFromS3(picUrlSqKey);
+      }
+    } catch (error) {
+      console.error('Error deleting S3 files:', error);
+      // Don't throw error to prevent pet deletion failure
+    }
+  }
+});
+
 module.exports = mongoose.model('Pet', PetSchema);

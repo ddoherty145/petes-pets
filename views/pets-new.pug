@@ -3,7 +3,7 @@ extends layout
 block content
   .container
     h1 Add a New Pet
-    form#new-pet(action='/pets', method='POST')
+    form#new-pet(action='/pets', method='POST', enctype='multipart/form-data')
       .form-group
         label Name*
         input.form-control(name='name', required)
@@ -14,11 +14,13 @@ block content
         label Species*
         input.form-control(name='species', required)
       .form-group
-        label Rectangular Image URL*
-        input.form-control(name='picUrl', type='url', required)
+        label Rectangular Image*
+        input.form-control(name='picUrl', type='file', accept='image/*', required)
+        small.form-text.text-muted Upload a rectangular image (max 5MB)
       .form-group
-        label Square Image URL*
-        input.form-control(name='picUrlSq', type='url', required)
+        label Square Image*
+        input.form-control(name='picUrlSq', type='file', accept='image/*', required)
+        small.form-text.text-muted Upload a square image (max 5MB)
       .form-group
         label Favorite Food*
         input.form-control(name='favoriteFood', required)

@@ -1,0 +1,20 @@
+# AWS S3 Configuration Template
+# Copy this to .env and replace with your actual credentials
+
+# 🔑 REPLACE THESE WITH YOUR ACTUAL AWS CREDENTIALS
+AWS_ACCESS_KEY_ID=your_access_key_id_here
+AWS_SECRET_ACCESS_KEY=your_secret_access_key_here
+S3_REGION=us-west-1
+S3_BUCKET=your_bucket_name_here
+
+# Example:
+# AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+# AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+# S3_REGION=us-west-1
+# S3_BUCKET=petstore-avatars-2025-yourname
+
+# Instructions:
+# 1. Create a .env file in your project root
+# 2. Copy the content above into .env
+# 3. Replace the placeholder values with your actual AWS credentials
+# 4. Make sure .env is in your .gitignore file

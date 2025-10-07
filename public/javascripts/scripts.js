@@ -2,13 +2,27 @@ if (document.querySelector('#new-pet')) {
   document.querySelector('#new-pet').addEventListener('submit', (e) => {
     e.preventDefault();
 
-    const pet = {};
+    // Create FormData for file uploads
+    const formData = new FormData();
     const inputs = document.querySelectorAll('.form-control');
+    
     for (const input of inputs) {
-      pet[input.name] = input.value;
+      if (input.type === 'file') {
+        // Handle file inputs
+        if (input.files[0]) {
+          formData.append(input.name, input.files[0]);
+        }
+      } else {
+        // Handle text inputs
+        formData.append(input.name, input.value);
+      }
     }
 
-    axios.post('/pets', pet)
+    axios.post('/pets', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
       .then((response) => {
         const alert = document.getElementById('alert');
         alert.classList.add('alert-success');

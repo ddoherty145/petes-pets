@@ -1,5 +1,6 @@
 // MODELS
 const Pet = require('../models/pet');
+const { uploadPetImages, handleUploadError, processUploadedFiles } = require('../middleware/upload');
 
 // PET ROUTES
 module.exports = (app) => {
@@ -12,7 +13,7 @@ module.exports = (app) => {
   });
 
   // CREATE PET
-  app.post('/pets', (req, res) => {
+  app.post('/pets', uploadPetImages, processUploadedFiles, (req, res) => {
     const pet = new Pet(req.body);
     pet.save()
       .then((savedPet) => {
@@ -87,4 +88,7 @@ module.exports = (app) => {
       res.status(500).send('Server Error');
     });
   });
+
+  // Add upload error handling middleware
+  app.use(handleUploadError);
 }
