@@ -28,6 +28,9 @@ block content
         label Favorite Food*
         input.form-control(name="favoriteFood" value=pet.favoriteFood, required)    
       .form-group
+        label Price* ($)
+        input.form-control(name='price', type='number', min='0', required, value=pet.price)
+      .form-group
         label Description* (min 140 chars)
         textarea.form-control(name="description", required, minlength='140')= pet.description
       button(type="submit").btn.btn-primary Save Changes

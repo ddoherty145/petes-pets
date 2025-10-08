@@ -21,9 +21,8 @@ block content
         label Favorite Food*
         input.form-control(name='favoriteFood', required)
       .form-group
-        label Price (USD)
-        input.form-control(name='price', type='number', min='0', step='0.01', value='50')
-        small.form-text.text-muted Default adoption fee is $50
+        label Price* ($)
+        input.form-control(name='price', type='number', min='0', required)
       .form-group
         label Description* (min 140 chars)
         textarea.form-control(name='description', required, minlength='140')
