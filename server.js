@@ -1,6 +1,7 @@
 if (!process.env.PORT) {
   require('dotenv').config()
-  process.env.NODE_ENV = "dev"
+  // Only set a default when NODE_ENV is not already provided (e.g., tests)
+  if (!process.env.NODE_ENV) process.env.NODE_ENV = "dev"
 }
 
 const express = require('express');

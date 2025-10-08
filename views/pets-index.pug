@@ -1,31 +1,39 @@
 extends layout
 
 block content
+  - var safePets = Array.isArray(pets) ? pets : []
+  - var page = parseInt(currentPage, 10) || 1
+  - var pageCount = (typeof pagesCount === 'number' && pagesCount > 0) ? pagesCount : 1
+  - var qTerm = typeof term === 'string' ? term : ''
   .row
-    each pet, index in pets
-      .col-sm-4.justify-content-center
-        .card
-          if pet.avatarUrl
-            img.card-img-top(src=`${pet.avatarUrl}-standard.jpg`, alt=pet.name)
-          else if pet.picUrl
-            img.card-img-top(src=pet.picUrl, alt=pet.name)
-          .card-body
-            h4.card-title= pet.name
-            small.text-muted= pet.species
-            p.card-text= pet.description
-            .text-right
-                a.card-link(href=`/pets/${pet._id}`) View #{pet.name}
+    if safePets.length === 0
+      .col-12
+        p.text-muted.text-center No pets found.
+    else
+      each pet, index in safePets
+        .col-sm-4.justify-content-center
+          .card
+            if pet.avatarUrl
+              img.card-img-top(src=`${pet.avatarUrl}-standard.jpg`, alt=pet.name)
+            else if pet.picUrl
+              img.card-img-top(src=pet.picUrl, alt=pet.name)
+            .card-body
+              h4.card-title= pet.name
+              small.text-muted= pet.species
+              p.card-text= pet.description
+              .text-right
+                  a.card-link(href=`/pets/${pet._id}`) View #{pet.name}
 
-    nav(aria-label='Page navigation').d-flex.justify-content-center
-      ul.pagination
-      if currentPage > 1
+  nav(aria-label='Page navigation').d-flex.justify-content-center
+    ul.pagination
+      if page > 1
         li.page-item
-          a.page-link(href= term ? `?term=${term}&page=${currentPage - 1}` : `?page=${currentPage - 1}`) Previous
+          a.page-link(href= qTerm ? `?term=${qTerm}&page=${page - 1}` : `?page=${page - 1}`) Previous
       - var i = 1
-      while i <= pagesCount
-        li.page-item(class= i == currentPage ? 'active' : '')
-          a.page-link(href= term ? `?term=${term}&page=${i}` : `?page=${i}`)= i++
-      if currentPage < pagesCount
+      while i <= pageCount
+        li.page-item(class= i == page ? 'active' : '')
+          a.page-link(href= qTerm ? `?term=${qTerm}&page=${i}` : `?page=${i}`)= i++
+      if page < pageCount
         li.page-item
-          a.page-link(href= term ? `?term=${term}&page=${parseInt(currentPage) + 1}` : `?page=${parseInt(currentPage) + 1}`) Next
+          a.page-link(href= qTerm ? `?term=${qTerm}&page=${page + 1}` : `?page=${page + 1}`) Next
 
