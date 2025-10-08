@@ -1,23 +1,18 @@
 "use strict";
 
 const mongoose = require('mongoose');
-const mongoosePaginate = require('mongoose-paginate-v2');
+const mongoosePaginate = require('mongoose-paginate');
 const Schema = mongoose.Schema;
 
-mongoosePaginate.paginate.options = {
-  limit: 10 // 10 pets per page
-};
+mongoosePaginate.paginate.options = { limit: 10 };
 
 const PetSchema = new Schema({
   name: { type: String, required: [true, 'Name is required'] },
   species: { type: String, required: [true, 'Species is required'] },
   birthday: { type: Date, required: [true, 'Birthday is required'] },
-  picUrl: { type: String }, // Legacy field - optional
-  picUrlSq: { type: String }, // Legacy field - optional
-  avatarUrl: { 
-    type: String, 
-    match: [/^pets\/avatar\/.+/, 'Avatar URL must be a valid S3 path']
-  },
+  picUrl: { type: String }, // Legacy
+  picUrlSq: { type: String }, // Legacy
+  avatarUrl: { type: String, required: [true, 'Avatar URL is required'] },
   favoriteFood: { type: String, required: [true, 'Favorite Food is required'] },
   description: { 
     type: String, 
@@ -26,53 +21,12 @@ const PetSchema = new Schema({
   },
   price: { 
     type: Number, 
-    default: 50,
-    min: [0, 'Price must be positive']
+    required: [true, 'Price is required'],
+    min: [0, 'Price must be non-negative']
   },
   purchasedAt: { type: Date }
-}, {
-  timestamps: true
-});
+}, { timestamps: true });
 
 PetSchema.plugin(mongoosePaginate);
-
-// Pre-remove middleware to delete S3 files when pet is deleted
-PetSchema.pre('findOneAndDelete', async function() {
-  const pet = await this.model.findOne(this.getQuery());
-  if (pet) {
-    const { deleteFromS3 } = require('../config/s3');
-    
-    // Extract S3 key from URL
-    const extractS3Key = (url) => {
-      if (url && url.includes('.amazonaws.com/')) {
-        return url.split('.amazonaws.com/')[1];
-      }
-      return null;
-    };
-    
-    try {
-      // Delete avatar image (primary)
-      const avatarKey = extractS3Key(pet.avatarUrl);
-      if (avatarKey) {
-        await deleteFromS3(avatarKey);
-      }
-      
-      // Delete legacy rectangular image (if exists)
-      const picUrlKey = extractS3Key(pet.picUrl);
-      if (picUrlKey) {
-        await deleteFromS3(picUrlKey);
-      }
-      
-      // Delete legacy square image (if exists)
-      const picUrlSqKey = extractS3Key(pet.picUrlSq);
-      if (picUrlSqKey) {
-        await deleteFromS3(picUrlSqKey);
-      }
-    } catch (error) {
-      console.error('Error deleting S3 files:', error);
-      // Don't throw error to prevent pet deletion failure
-    }
-  }
-});
 
 module.exports = mongoose.model('Pet', PetSchema);
