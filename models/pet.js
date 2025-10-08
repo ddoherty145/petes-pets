@@ -16,15 +16,20 @@ const PetSchema = new Schema({
   picUrlSq: { type: String }, // Legacy field - optional
   avatarUrl: { 
     type: String, 
-    required: [true, 'Avatar URL is required'],
-    match: [/^https?:\/\/.+/i, 'Avatar URL must be a valid URL']
+    match: [/^pets\/avatar\/.+/, 'Avatar URL must be a valid S3 path']
   },
   favoriteFood: { type: String, required: [true, 'Favorite Food is required'] },
   description: { 
     type: String, 
     required: [true, 'Description is required'],
     minlength: [140, 'Description must be at least 140 characters']
-  }
+  },
+  price: { 
+    type: Number, 
+    default: 50,
+    min: [0, 'Price must be positive']
+  },
+  purchasedAt: { type: Date }
 }, {
   timestamps: true
 });

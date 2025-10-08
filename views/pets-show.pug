@@ -1,6 +1,21 @@
 extends layout
 
 block content
+  // Success/Cancel Messages
+  if success
+    .alert.alert-success
+      h4.alert-heading 🎉 Congratulations!
+      p You have successfully adopted #{pet.name}!
+      hr
+      p.mb-0 Thank you for giving #{pet.name} a loving home.
+  
+  if canceled
+    .alert.alert-warning
+      h4.alert-heading Payment Canceled
+      p The payment was canceled. #{pet.name} is still available for adoption.
+      hr
+      p.mb-0 You can try again anytime.
+
   .row
     .col-sm-4
       if pet.avatarUrl
@@ -12,5 +27,54 @@ block content
       p=pet.species
       p Born on #{pet.birthday}
       p=pet.description
-      .text-right
+      
+      // Purchase Section
+      if pet.purchasedAt
+        .alert.alert-info
+          h5 🏠 Already Adopted
+          p This pet was adopted on #{pet.purchasedAt.toLocaleDateString()}
+      else
+        .card.mt-3
+          .card-body
+            h5.card-title Adopt #{pet.name}
+            p.card-text Price: $#{pet.price || 50}
+            button#purchase-btn.btn.btn-primary.btn-lg(type='button')
+              | Adopt #{pet.name} - $#{pet.price || 50}
+            p.small.text-muted.mt-2 Secure payment powered by Stripe
+      
+      .text-right.mt-3
         a(href="/pets/" + pet._id + "/edit").btn-link Edit
+
+  script.
+    // Purchase functionality
+    document.getElementById('purchase-btn').addEventListener('click', async function() {
+      const button = this;
+      const originalText = button.textContent;
+      
+      try {
+        button.textContent = 'Processing...';
+        button.disabled = true;
+        
+        const response = await fetch(`/pets/#{pet._id}/purchase`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.sessionId) {
+          // Redirect to Stripe Checkout
+          const stripe = Stripe('#{PUBLIC_STRIPE_API_KEY}');
+          stripe.redirectToCheckout({ sessionId: data.sessionId });
+        } else {
+          throw new Error(data.error || 'Payment failed');
+        }
+      } catch (error) {
+        console.error('Payment error:', error);
+        alert('Payment failed: ' + error.message);
+        button.textContent = originalText;
+        button.disabled = false;
+      }
+    });

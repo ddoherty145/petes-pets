@@ -4,6 +4,7 @@ const multer = require('multer');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { Upload } = require('@aws-sdk/lib-storage');
 const sharp = require('sharp');
+const stripe = require('stripe')(process.env.PRIVATE_STRIPE_API_KEY);
 require('dotenv').config();
 
 // Configure multer for memory storage
@@ -98,9 +99,62 @@ module.exports = (app) => {
   app.get('/pets/:id', async (req, res, next) => {
     try {
       const pet = await Pet.findById(req.params.id);
-      res.render('pets-show', { pet: pet });
+      if (!pet) return res.status(404).render('error', { message: 'Pet not found' });
+      
+      // Handle successful payment
+      if (req.query.success === 'true' && !pet.purchasedAt) {
+        pet.purchasedAt = new Date();
+        await pet.save();
+      }
+
+      res.render('pets-show', {
+        pet,
+        success: req.query.success === 'true',
+        canceled: req.query.canceled === 'true'
+      });
     } catch (err) {
-      next(err);
+      console.error(err);
+      res.status(500).render('error', { message: 'Server error' });
+    }
+  });
+
+  // PURCHASE PET
+  app.post('/pets/:id/purchase', async (req, res) => {
+    try {
+      const pet = await Pet.findById(req.params.id);
+      if (!pet) return res.status(404).json({ error: 'Pet not found' });
+      if (pet.purchasedAt) return res.status(400).json({ error: 'Pet already purchased' });
+
+      // Create Stripe Checkout session
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `${pet.name}, ${pet.species}`,
+                description: pet.description.substring(0, 500),
+                images: pet.avatarUrl ? [`${pet.avatarUrl}-standard.jpg`] : []
+              },
+              unit_amount: (pet.price || 50) * 100 // Default $50 if no price set
+            },
+            quantity: 1
+          }
+        ],
+        mode: 'payment',
+        success_url: `${req.protocol}://${req.get('host')}/pets/${pet._id}?success=true`,
+        cancel_url: `${req.protocol}://${req.get('host')}/pets/${pet._id}?canceled=true`,
+        metadata: {
+          petId: pet._id.toString(),
+          petName: pet.name
+        }
+      });
+
+      res.json({ sessionId: session.id });
+    } catch (err) {
+      console.error('Stripe error:', err);
+      res.status(500).json({ error: 'Server error' });
     }
   });
 
