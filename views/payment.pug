@@ -1,0 +1,85 @@
+extends layout
+
+block content
+  .container
+    h1 Pet Adoption Payment
+    
+    .row
+      .col-md-6
+        .card
+          .card-body
+            h5.card-title Adopt #{pet.name}
+            p.card-text= pet.description
+            p.card-text
+              strong Species: #{pet.species}
+            p.card-text
+              strong Adoption Fee: $50.00
+      
+      .col-md-6
+        .card
+          .card-body
+            h5.card-title Payment Information
+            
+            // Stripe Elements will be inserted here
+            #card-element
+            #card-errors(role='alert')
+            
+            button#submit-payment.btn.btn-primary.mt-3(type='button')
+              | Pay $50.00
+            
+            .mt-3
+              small.text-muted
+                | Secure payment powered by Stripe
+
+    script.
+      // Create Stripe Elements
+      var elements = stripe.elements();
+      
+      // Create card element
+      var cardElement = elements.create('card', {
+        style: {
+          base: {
+            fontSize: '16px',
+            color: '#424770',
+            '::placeholder': {
+              color: '#aab7c4',
+            },
+          },
+        },
+      });
+      
+      // Mount the card element
+      cardElement.mount('#card-element');
+      
+      // Handle form submission
+      var form = document.getElementById('payment-form');
+      var submitButton = document.getElementById('submit-payment');
+      
+      submitButton.addEventListener('click', function(ev) {
+        ev.preventDefault();
+        
+        stripe.confirmCardPayment('{PAYMENT_INTENT_CLIENT_SECRET}', {
+          payment_method: {
+            card: cardElement,
+          }
+        }).then(function(result) {
+          if (result.error) {
+            // Show error to customer
+            var errorElement = document.getElementById('card-errors');
+            errorElement.textContent = result.error.message;
+          } else {
+            // Payment succeeded
+            window.location.href = '/pets/' + '#{pet._id}' + '/success';
+          }
+        });
+      });
+      
+      // Handle real-time validation errors
+      cardElement.on('change', function(event) {
+        var displayError = document.getElementById('card-errors');
+        if (event.error) {
+          displayError.textContent = event.error.message;
+        } else {
+          displayError.textContent = '';
+        }
+      });

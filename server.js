@@ -13,6 +13,9 @@ const methodOverride = require('method-override')
 
 const app = express();
 
+// Make Stripe public key available to all views
+app.locals.PUBLIC_STRIPE_API_KEY = process.env.PUBLIC_STRIPE_API_KEY;
+
 const mongoose = require('mongoose');
 
 // Only connect to MongoDB if not in test environment
