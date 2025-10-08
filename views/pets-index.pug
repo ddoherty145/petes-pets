@@ -5,7 +5,10 @@ block content
     each pet, index in pets
       .col-sm-4.justify-content-center
         .card
-          img.card-img-top(src=pet.picUrl, alt='Card image cap')
+          if pet.avatarUrl
+            img.card-img-top(src=`${pet.avatarUrl}-standard.jpg`, alt=pet.name)
+          else if pet.picUrl
+            img.card-img-top(src=pet.picUrl, alt=pet.name)
           .card-body
             h4.card-title= pet.name
             small.text-muted= pet.species

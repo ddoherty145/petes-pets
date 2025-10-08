@@ -88,9 +88,16 @@ typings/
 .env
 venv/
 
+# AWS credentials and sensitive files
+*.csv
+.petstore-s3-user_*
+AWS-CREDENTIALS-GUIDE.md
+BUCKET-CREATION.md
+BUCKET-FIX.md
+
 
 
 
 # End of https://www.gitignore.io/api/node,macos,bower
 todo.txt
-old-code.txt
+old-code.txtuploads/

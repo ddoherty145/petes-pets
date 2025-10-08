@@ -2,26 +2,11 @@ if (document.querySelector('#new-pet')) {
   document.querySelector('#new-pet').addEventListener('submit', (e) => {
     e.preventDefault();
 
-    // Create FormData for file uploads
-    const formData = new FormData();
-    const inputs = document.querySelectorAll('.form-control');
-    
-    for (const input of inputs) {
-      if (input.type === 'file') {
-        // Handle file inputs
-        if (input.files[0]) {
-          formData.append(input.name, input.files[0]);
-        }
-      } else {
-        // Handle text inputs
-        formData.append(input.name, input.value);
-      }
-    }
+    const form = document.getElementById('new-pet');
+    const formData = new FormData(form);
 
     axios.post('/pets', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+      headers: { 'Content-Type': 'multipart/form-data' }
     })
       .then((response) => {
         const alert = document.getElementById('alert');

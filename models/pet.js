@@ -12,15 +12,12 @@ const PetSchema = new Schema({
   name: { type: String, required: [true, 'Name is required'] },
   species: { type: String, required: [true, 'Species is required'] },
   birthday: { type: Date, required: [true, 'Birthday is required'] },
-  picUrl: { 
+  picUrl: { type: String }, // Legacy field - optional
+  picUrlSq: { type: String }, // Legacy field - optional
+  avatarUrl: { 
     type: String, 
-    required: [true, 'Rectangular Image URL is required'],
-    match: [/^https?:\/\/.+/i, 'Rectangular Image URL must be a valid URL']
-  },
-  picUrlSq: { 
-    type: String, 
-    required: [true, 'Square Image URL is required'],
-    match: [/^https?:\/\/.+/i, 'Square Image URL must be a valid URL']
+    required: [true, 'Avatar URL is required'],
+    match: [/^https?:\/\/.+/i, 'Avatar URL must be a valid URL']
   },
   favoriteFood: { type: String, required: [true, 'Favorite Food is required'] },
   description: { 
@@ -49,13 +46,19 @@ PetSchema.pre('findOneAndDelete', async function() {
     };
     
     try {
-      // Delete rectangular image
+      // Delete avatar image (primary)
+      const avatarKey = extractS3Key(pet.avatarUrl);
+      if (avatarKey) {
+        await deleteFromS3(avatarKey);
+      }
+      
+      // Delete legacy rectangular image (if exists)
       const picUrlKey = extractS3Key(pet.picUrl);
       if (picUrlKey) {
         await deleteFromS3(picUrlKey);
       }
       
-      // Delete square image
+      // Delete legacy square image (if exists)
       const picUrlSqKey = extractS3Key(pet.picUrlSq);
       if (picUrlSqKey) {
         await deleteFromS3(picUrlSqKey);

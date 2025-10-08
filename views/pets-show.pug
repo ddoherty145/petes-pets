@@ -3,8 +3,10 @@ extends layout
 block content
   .row
     .col-sm-4
-      if pet.picUrlSq
-        img(src=pet.picUrlSq).img-fluid
+      if pet.avatarUrl
+        img(src=`${pet.avatarUrl}-square.jpg`, alt=pet.name).img-fluid
+      else if pet.picUrlSq
+        img(src=pet.picUrlSq, alt=pet.name).img-fluid
     .col-sm-8
       h1=pet.name
       p=pet.species
@@ -12,4 +14,3 @@ block content
       p=pet.description
       .text-right
         a(href="/pets/" + pet._id + "/edit").btn-link Edit
-      

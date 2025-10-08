@@ -14,18 +14,14 @@ block content
         label Species*
         input.form-control(name='species', required)
       .form-group
-        label Rectangular Image*
-        input.form-control(name='picUrl', type='file', accept='image/*', required)
-        small.form-text.text-muted Upload a rectangular image (max 5MB)
-      .form-group
-        label Square Image*
-        input.form-control(name='picUrlSq', type='file', accept='image/*', required)
-        small.form-text.text-muted Upload a square image (max 5MB)
+        label Avatar Image* (JPEG/PNG, max 5MB)
+        input.form-control(name='avatar', type='file', accept='image/jpeg,image/png', required)
+        small.form-text.text-muted Upload a pet photo (JPEG or PNG format, maximum 5MB)
       .form-group
         label Favorite Food*
         input.form-control(name='favoriteFood', required)
       .form-group
-        label Description* (minimum 140 characters)
+        label Description* (min 140 chars)
         textarea.form-control(name='description', required, minlength='140')
       button.btn.btn-primary(type='submit') Save Pet
     style.

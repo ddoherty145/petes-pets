@@ -1,33 +1,38 @@
 extends layout
 
 block content
-    
-    .row.justify-content-center
-        .col-sm-6
-            legend New Pet
-            form(action=`/pets/${pet._id}?_method=PUT`, method="POST")
-                .form-group
-                    label Name
-                    input.form-control(name="name" value=pet.name)
-                .form-group
-                    label Birthday
-                    input.form-control(name="birthday" value=pet.birthday)   
-                .form-group
-                    label Species
-                    input.form-control(name="species" value=pet.species)    
-                .form-group
-                    label Rectangular Image URL
-                    input.form-control(name="picUrl" value=pet.picUrl) 
-                .form-group
-                    label Square Image URL
-                    input.form-control(name="picUrlSq" value=pet.picUrlSq) 
-                .form-group
-                    label Favorite Food
-                    input.form-control(name="favoriteFood" value=pet.favoriteFood)    
-                .form-group
-                    label Description
-                    textarea.form-control(name="description")= pet.description
-                button(type="submit").btn.btn-primary Save
-            .text-right
-                form(action=`/pets/${pet._id}?_method=DELETE`, method="POST")
-                    button(type="submit").btn.btn-danger Remove
+  .container
+    h1 Edit Pet: #{pet.name}
+    form(action=`/pets/${pet._id}?_method=PUT`, method="POST", enctype='multipart/form-data')
+      .form-group
+        label Name*
+        input.form-control(name="name" value=pet.name, required)
+      .form-group
+        label Birthday*
+        input.form-control(name="birthday" value=pet.birthday, type='date', required)   
+      .form-group
+        label Species*
+        input.form-control(name="species" value=pet.species, required)    
+      .form-group
+        label Current Avatar
+        if pet.avatarUrl
+          img.img-thumbnail(src=`${pet.avatarUrl}-square.jpg`, alt=pet.name, style='max-width: 200px; margin-bottom: 10px;')
+          br
+        else if pet.picUrl
+          img.img-thumbnail(src=pet.picUrl, alt=pet.name, style='max-width: 200px; margin-bottom: 10px;')
+          br
+        label New Avatar Image (JPEG/PNG, max 5MB)
+        input.form-control(name="avatar" type="file" accept="image/jpeg,image/png")
+        small.form-text.text-muted Leave empty to keep current image
+      .form-group
+        label Favorite Food*
+        input.form-control(name="favoriteFood" value=pet.favoriteFood, required)    
+      .form-group
+        label Description* (min 140 chars)
+        textarea.form-control(name="description", required, minlength='140')= pet.description
+      button(type="submit").btn.btn-primary Save Changes
+    .text-right.mt-3
+      form(action=`/pets/${pet._id}?_method=DELETE`, method="POST")
+        button(type="submit").btn.btn-danger Remove Pet
+    style.
+      label::after { content: '*'; color: red; margin-left: 4px; }

@@ -1,11 +1,8 @@
 const multer = require('multer');
 const { upload } = require('../config/s3');
 
-// Middleware for uploading pet images
-const uploadPetImages = upload.fields([
-  { name: 'picUrl', maxCount: 1 },      // Rectangular image
-  { name: 'picUrlSq', maxCount: 1 }     // Square image
-]);
+// Middleware for uploading pet avatar
+const uploadPetAvatar = upload.single('avatar');
 
 // Error handling middleware for file uploads
 const handleUploadError = (err, req, res, next) => {
@@ -37,22 +34,20 @@ const handleUploadError = (err, req, res, next) => {
   next(err);
 };
 
-// Middleware to process uploaded files and add URLs to req.body
-const processUploadedFiles = (req, res, next) => {
-  if (req.files) {
-    // Add S3 URLs to req.body for database storage
-    if (req.files.picUrl && req.files.picUrl[0]) {
-      req.body.picUrl = req.files.picUrl[0].location;
-    }
-    if (req.files.picUrlSq && req.files.picUrlSq[0]) {
-      req.body.picUrlSq = req.files.picUrlSq[0].location;
-    }
+// Middleware to process uploaded avatar and add URL to req.body
+const processUploadedAvatar = (req, res, next) => {
+  if (req.file) {
+    // Add S3 URL to req.body for database storage
+    req.body.avatarUrl = req.file.location;
+    // Keep legacy fields for backward compatibility
+    req.body.picUrl = req.file.location;
+    req.body.picUrlSq = req.file.location;
   }
   next();
 };
 
 module.exports = {
-  uploadPetImages,
+  uploadPetAvatar,
   handleUploadError,
-  processUploadedFiles
+  processUploadedAvatar
 };

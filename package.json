@@ -8,7 +8,8 @@
     "test": "mocha test/test-pets.js --timeout 10000"
   },
   "dependencies": {
-    "aws-sdk": "^2.1692.0",
+    "@aws-sdk/client-s3": "^3.901.0",
+    "@aws-sdk/lib-storage": "^3.905.0",
     "body-parser": "^1.20.3",
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
@@ -22,11 +23,12 @@
     "multer-s3": "^3.0.1",
     "pug": "^3.0.1",
     "serve-favicon": "~2.4.5",
+    "sharp": "^0.34.4",
     "stripe": "^5.3.0"
   },
   "devDependencies": {
-    "chai": "^4.1.2",
-    "chai-http": "^4.0.0",
+    "chai": "^4.5.0",
+    "chai-http": "^4.4.0",
     "mocha": "^11.7.4",
     "nodemon": "^3.1.10"
   }

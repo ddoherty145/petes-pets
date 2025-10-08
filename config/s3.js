@@ -1,22 +1,21 @@
-const AWS = require('aws-sdk');
+const { S3Client } = require('@aws-sdk/client-s3');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 
-// Configure AWS SDK
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID, // 🔑 YOUR ACCESS KEY ID
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY, // 🔑 YOUR SECRET ACCESS KEY
+// Configure AWS SDK v3
+const s3 = new S3Client({
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID, // 🔑 YOUR ACCESS KEY ID
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY, // 🔑 YOUR SECRET ACCESS KEY
+  },
   region: process.env.S3_REGION || 'us-west-1'
 });
-
-const s3 = new AWS.S3();
 
 // Configure multer for S3 uploads
 const upload = multer({
   storage: multerS3({
     s3: s3,
     bucket: process.env.S3_BUCKET, // 🔑 YOUR BUCKET NAME
-    acl: 'public-read',
     key: function (req, file, cb) {
       // Generate unique filename with timestamp
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -42,11 +41,13 @@ const upload = multer({
 });
 
 // Helper function to delete files from S3
-const deleteFromS3 = (key) => {
-  return s3.deleteObject({
+const deleteFromS3 = async (key) => {
+  const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
+  const command = new DeleteObjectCommand({
     Bucket: process.env.S3_BUCKET, // 🔑 YOUR BUCKET NAME
     Key: key
-  }).promise();
+  });
+  return s3.send(command);
 };
 
 // Helper function to get S3 URL
