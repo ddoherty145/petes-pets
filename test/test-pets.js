@@ -33,6 +33,7 @@ const fido = {
     "favoriteFood": "Liver",
     "picUrl": "https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&h=300&fit=crop",
     "picUrlSq": "https://images.unsplash.com/photo-1552053831-71594a27632d?w=250&h=250&fit=crop",
+    "price": 199.99,
     "description": "Norman is a wonderful Greyhound who loves to play and hang out with his owners. He enjoys long walks in the park, playing fetch with his favorite toys, and taking naps in the sunshine. Norman is very friendly with children and other dogs, making him the perfect family pet. He has a gentle temperament and loves belly rubs."
 }
 
@@ -165,6 +166,7 @@ describe('Pets', ()  => {
         picUrl: 'https://example.com/rex.jpg',
         picUrlSq: 'https://example.com/rex-square.jpg',
         favoriteFood: 'Chicken',
+        price: 299.99,
         description: 'A friendly dog with a wagging tail and a love for adventure.'.padEnd(140, ' ')
       };
       chai.request(app)
@@ -194,6 +196,7 @@ describe('Pets', ()  => {
           res.body.should.have.property('errors');
           res.body.errors.should.have.property('name').with.property('message', 'Name is required');
           res.body.errors.should.have.property('description').with.property('message', 'Description must be at least 140 characters');
+          res.body.errors.should.have.property('price').with.property('message', 'Price is required');
           done();
         });
     });
@@ -229,6 +232,7 @@ describe('Pets', ()  => {
         species: 'Dog',
         birthday: '2020-01-01',
         favoriteFood: 'Chicken',
+        price: 299.99,
         description: 'A friendly dog with a wagging tail and a love for adventure.'.padEnd(140, ' ')
       };
       
@@ -240,6 +244,7 @@ describe('Pets', ()  => {
         .field('species', validPet.species)
         .field('birthday', validPet.birthday)
         .field('favoriteFood', validPet.favoriteFood)
+        .field('price', validPet.price)
         .field('description', validPet.description)
         .attach('avatar', testImageBuffer, 'test.jpg')
         .end((err, res) => {
@@ -262,6 +267,7 @@ describe('Pets', ()  => {
         species: 'Dog',
         birthday: '2020-01-01',
         favoriteFood: 'Chicken',
+        price: 299.99,
         description: 'A friendly dog with a wagging tail and a love for adventure.'.padEnd(140, ' ')
       };
       
@@ -273,6 +279,7 @@ describe('Pets', ()  => {
         .field('species', validPet.species)
         .field('birthday', validPet.birthday)
         .field('favoriteFood', validPet.favoriteFood)
+        .field('price', validPet.price)
         .field('description', validPet.description)
         .attach('avatar', invalidFileBuffer, 'test.txt')
         .end((err, res) => {
@@ -288,6 +295,7 @@ describe('Pets', ()  => {
         species: 'Dog',
         birthday: '2020-01-01',
         favoriteFood: 'Chicken',
+        price: 299.99,
         description: 'A friendly dog with a wagging tail and a love for adventure.'.padEnd(140, ' ')
       };
       
@@ -300,6 +308,7 @@ describe('Pets', ()  => {
         .field('species', validPet.species)
         .field('birthday', validPet.birthday)
         .field('favoriteFood', validPet.favoriteFood)
+        .field('price', validPet.price)
         .field('description', validPet.description)
         .attach('avatar', largeFileBuffer, 'large.jpg')
         .end((err, res) => {
@@ -317,6 +326,7 @@ describe('Pets', ()  => {
         species: 'Dog',
         birthday: '2020-01-01',
         favoriteFood: 'Chicken',
+        price: 299.99,
         description: 'A friendly dog with a wagging tail and a love for adventure.'.padEnd(140, ' ')
       };
       
@@ -326,6 +336,7 @@ describe('Pets', ()  => {
         .field('species', validPet.species)
         .field('birthday', validPet.birthday)
         .field('favoriteFood', validPet.favoriteFood)
+        .field('price', validPet.price)
         .field('description', validPet.description)
         .end((err, res) => {
           should.not.exist(err);
@@ -344,6 +355,7 @@ describe('Pets', ()  => {
         species: 'Dog',
         birthday: '2020-01-01',
         favoriteFood: 'Chicken',
+        price: 299.99,
         description: 'A friendly dog with a wagging tail and a love for adventure.'.padEnd(140, ' ')
       };
       
@@ -364,6 +376,7 @@ describe('Pets', ()  => {
         .field('species', validPet.species)
         .field('birthday', validPet.birthday)
         .field('favoriteFood', validPet.favoriteFood)
+        .field('price', validPet.price)
         .field('description', validPet.description)
         .attach('avatar', pngBuffer, 'test.png')
         .end((err, res) => {
@@ -372,6 +385,140 @@ describe('Pets', ()  => {
           res.body.should.have.property('pet');
           res.body.pet.should.have.property('avatarUrl');
           res.body.pet.avatarUrl.should.match(/^pets\/avatar\/\d+-\d+$/);
+          done();
+        });
+    });
+  });
+
+  // Test POST /pets/:id/purchase (Stripe Checkout)
+  describe('POST /pets/:id/purchase', () => {
+    let petId;
+    
+    before(async () => {
+      const pet = new Pet({
+        name: 'Test Pet',
+        species: 'Cat',
+        birthday: new Date('2020-01-01'),
+        avatarUrl: 'pets/avatar/test',
+        favoriteFood: 'Tuna',
+        description: 'A cuddly cat with soft fur and playful personality. This adorable feline loves to chase toys, curl up in warm spots, and purr contentedly when petted. Perfect for families looking for a gentle companion who brings joy and laughter to the home.',
+        price: 199.99
+      });
+      await pet.save();
+      petId = pet._id;
+    });
+
+    after(async () => {
+      await Pet.findByIdAndDelete(petId);
+    });
+
+    it('should create a Stripe Checkout session', (done) => {
+      chai.request(app)
+        .post(`/pets/${petId}/purchase`)
+        .end((err, res) => {
+          should.not.exist(err);
+          res.should.have.status(200);
+          res.body.should.have.property('sessionId');
+          res.body.sessionId.should.be.a('string');
+          res.body.sessionId.should.match(/^cs_test_/);
+          done();
+        });
+    });
+
+    it('should return 404 for non-existent pet', (done) => {
+      const fakeId = new mongoose.Types.ObjectId();
+      chai.request(app)
+        .post(`/pets/${fakeId}/purchase`)
+        .end((err, res) => {
+          should.not.exist(err);
+          res.should.have.status(404);
+          res.body.should.have.property('error', 'Pet not found');
+          done();
+        });
+    });
+
+    it('should return 400 for already purchased pet', async () => {
+      // Create a pet that's already purchased
+      const purchasedPet = new Pet({
+        name: 'Purchased Pet',
+        species: 'Dog',
+        birthday: new Date('2020-01-01'),
+        avatarUrl: 'pets/avatar/purchased',
+        favoriteFood: 'Kibble',
+        description: 'A wonderful dog who has already found a loving home. This loyal companion brings joy to their family every day.',
+        price: 299.99,
+        purchasedAt: new Date()
+      });
+      await purchasedPet.save();
+
+      try {
+        const res = await chai.request(app)
+          .post(`/pets/${purchasedPet._id}/purchase`);
+        
+        res.should.have.status(400);
+        res.body.should.have.property('error', 'Pet already purchased');
+      } finally {
+        await Pet.findByIdAndDelete(purchasedPet._id);
+      }
+    });
+  });
+
+  // Test GET /pets/:id with success/cancel parameters
+  describe('GET /pets/:id with payment status', () => {
+    let petId;
+    
+    before(async () => {
+      const pet = new Pet({
+        name: 'Payment Test Pet',
+        species: 'Rabbit',
+        birthday: new Date('2020-01-01'),
+        avatarUrl: 'pets/avatar/payment-test',
+        favoriteFood: 'Carrots',
+        description: 'A fluffy rabbit with long ears and a twitching nose. This adorable bunny loves to hop around, nibble on fresh vegetables, and snuggle in soft blankets.',
+        price: 149.99
+      });
+      await pet.save();
+      petId = pet._id;
+    });
+
+    after(async () => {
+      await Pet.findByIdAndDelete(petId);
+    });
+
+    it('should mark pet as purchased when success=true', async () => {
+      const res = await chai.request(app)
+        .get(`/pets/${petId}?success=true`);
+      
+      res.should.have.status(200);
+      res.should.be.html;
+      
+      // Check that pet was marked as purchased
+      const updatedPet = await Pet.findById(petId);
+      updatedPet.purchasedAt.should.be.a('Date');
+    });
+
+    it('should show success message when success=true', (done) => {
+      chai.request(app)
+        .get(`/pets/${petId}?success=true`)
+        .end((err, res) => {
+          should.not.exist(err);
+          res.should.have.status(200);
+          res.should.be.html;
+          res.text.should.include('Congratulations');
+          res.text.should.include('successfully adopted');
+          done();
+        });
+    });
+
+    it('should show cancel message when canceled=true', (done) => {
+      chai.request(app)
+        .get(`/pets/${petId}?canceled=true`)
+        .end((err, res) => {
+          should.not.exist(err);
+          res.should.have.status(200);
+          res.should.be.html;
+          res.text.should.include('Payment Canceled');
+          res.text.should.include('still available');
           done();
         });
     });
