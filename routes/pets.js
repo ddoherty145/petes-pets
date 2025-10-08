@@ -271,38 +271,31 @@ module.exports = (app) => {
     }
   });
 
-  //SEARCH PET
-  app.get('/search', (req, res) => {
-    const term = req.query.term ? new RegExp(req.query.term, 'i') : null;
-    const page = parseInt(req.query.page) || 1;
-  
-    const query = term ? {
-      $or: [
-        { name: term },
-        { species: term }
-      ]
-    } : {};
-  
-    Pet.paginate(query, { page, limit: 10 }).then((results) => {
-      const docs = results && results.docs ? results.docs : [];
-      const total = (results && (results.total || results.totalDocs)) || docs.length;
-      const lim = (results && results.limit) || 10;
-      const pages = results && (results.pages || results.totalPages);
-      const pagesCount = pages || Math.max(1, Math.ceil(total / lim));
-      try {
-        console.log('Search render params:', { term: req.query.term || '', docsLen: docs.length, pagesCount, page });
-        if (process.env.NODE_ENV === 'test') {
-          return res.status(200).send('<!doctype html><html><body>OK</body></html>');
-        }
-        res.render('pets-index', { pets: docs, pagesCount, currentPage: page, term: req.query.term || '' });
-      } catch (e) {
-        console.error('Render error (search):', e);
-        res.status(500).send('Server Error');
+  //SEARCH PET (Full-text search with relevance)
+  app.get('/search', async (req, res) => {
+    try {
+      const term = req.query.term;
+      if (!term || term.trim() === '') {
+        return res.status(400).json({ error: 'Search term is required' });
       }
-    }).catch((err) => {
+
+      const pets = await Pet.find(
+        { $text: { $search: term } },
+        { score: { $meta: 'textScore' } }
+      )
+        .sort({ score: { $meta: 'textScore' } })
+        .limit(20)
+        .exec();
+
+      if (req.header('Content-Type') === 'application/json') {
+        return res.json({ pets });
+      } else {
+        return res.render('pets-index', { pets, term });
+      }
+    } catch (err) {
       console.error(err);
-      res.status(500).send('Server Error');
-    });
+      res.status(500).json({ error: 'Server error' });
+    }
   });
 
   // Add error handling middleware for file uploads

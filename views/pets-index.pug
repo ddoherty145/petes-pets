@@ -5,10 +5,18 @@ block content
   - var page = parseInt(currentPage, 10) || 1
   - var pageCount = (typeof pagesCount === 'number' && pagesCount > 0) ? pagesCount : 1
   - var qTerm = typeof term === 'string' ? term : ''
+
+  .container.mb-3
+    h1 Pet Store
+    form(action='/search', method='GET')
+      .input-group.mb-3
+        input.form-control(type='text', name='term', placeholder='Search for pets...', value=qTerm || '')
+        .input-group-append
+          button.btn.btn-primary(type='submit') Search
   .row
     if safePets.length === 0
       .col-12
-        p.text-muted.text-center No pets found.
+        p.text-muted.text-center No pets found#{qTerm ? ` for "${qTerm}"` : ''}.
     else
       each pet, index in safePets
         .col-sm-4.justify-content-center

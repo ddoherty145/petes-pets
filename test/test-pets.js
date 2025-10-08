@@ -172,6 +172,69 @@ describe('Pets', ()  => {
     res.should.be.html;
   });
 
+  // New tests: full-text search HTML and JSON responses
+  describe('GET /search', () => {
+    before(async () => {
+      await Pet.deleteMany({});
+      const pets = [
+        {
+          name: 'Rex',
+          species: 'Dog',
+          birthday: new Date('2020-01-01'),
+          avatarUrl: 'pets/avatar/test',
+          favoriteFood: 'Chicken',
+          description: 'A friendly dog...'.padEnd(140, ' '),
+          price: 99.99
+        },
+        {
+          name: 'Whiskers',
+          species: 'Cat',
+          birthday: new Date('2021-01-01'),
+          avatarUrl: 'pets/avatar/test2',
+          favoriteFood: 'Tuna',
+          description: 'A cuddly cat...'.padEnd(140, ' '),
+          price: 49.99
+        }
+      ];
+      await Pet.insertMany(pets);
+    });
+
+    it('should return pets matching search term', (done) => {
+      chai.request(app)
+        .get('/search?term=dog')
+        .end((err, res) => {
+          should.not.exist(err);
+          res.should.have.status(200);
+          res.text.should.include('Rex');
+          res.text.should.not.include('Whiskers');
+          done();
+        });
+    });
+
+    it('should return JSON for API requests', (done) => {
+      chai.request(app)
+        .get('/search?term=cat')
+        .set('Content-Type', 'application/json')
+        .end((err, res) => {
+          should.not.exist(err);
+          res.should.have.status(200);
+          res.body.should.have.property('pets');
+          res.body.pets[0].should.have.property('name', 'Whiskers');
+          done();
+        });
+    });
+
+    it('should handle empty search term', (done) => {
+      chai.request(app)
+        .get('/search?term=')
+        .end((err, res) => {
+          res.should.have.status(400);
+          res.body.should.have.property('error', 'Search term is required');
+          done();
+        });
+    });
+  });
+
   // Test POST /pets validation
   describe('POST /pets', () => {
     it('should create a pet with valid data', (done) => {
