@@ -3,6 +3,8 @@ process.env.NODE_ENV = 'test';
 
 const chai = require('chai');
 const chaiHttp = require('chai-http');
+const sinon = require('sinon');
+const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
 const should = chai.should();
@@ -385,6 +387,42 @@ describe('Pets', ()  => {
           res.body.should.have.property('pet');
           res.body.pet.should.have.property('avatarUrl');
           res.body.pet.avatarUrl.should.match(/^pets\/avatar\/\d+-\d+$/);
+          done();
+        });
+    });
+  });
+
+  // Test purchase route email behavior (mocked)
+  describe('POST /pets/:id/purchase with email', () => {
+    let petId, stub;
+    before(async () => {
+      const pet = new Pet({
+        name: 'Test Pet',
+        species: 'Cat',
+        birthday: new Date('2020-01-01'),
+        avatarUrl: 'pets/avatar/test',
+        favoriteFood: 'Tuna',
+        description: 'A cuddly cat...'.padEnd(140, ' '),
+        price: 50
+      });
+      await pet.save();
+      petId = pet._id;
+      stub = sinon.stub(nodemailer, 'createTransport').returns({
+        sendMail: sinon.stub().resolves({ response: 'Email sent' })
+      });
+    });
+
+    after(() => {
+      if (stub && stub.restore) stub.restore();
+    });
+
+    it('should create a Stripe Checkout session (email mocked)', (done) => {
+      chai.request(app)
+        .post(`/pets/${petId}/purchase`)
+        .end((err, res) => {
+          should.not.exist(err);
+          res.should.have.status(200);
+          res.body.should.have.property('sessionId');
           done();
         });
     });
