@@ -42,6 +42,8 @@ app.use(cookieParser());
 
 
 app.use('/', require('./routes/index.js'));
+// API routes namespace
+app.use('/api/pets', require('./routes/api/pets'));
 require('./routes/pets.js')(app);
 
 // catch 404 and forward to error handler

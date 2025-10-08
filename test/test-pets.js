@@ -163,6 +163,122 @@ describe('Pets', ()  => {
     res.should.be.html;
   });
 
+  // JSON tests for root route
+  describe('GET / (JSON)', () => {
+    before(async () => {
+      await Pet.deleteMany({});
+      await Pet.insertMany([
+        {
+          name: 'Rex',
+          species: 'Dog',
+          birthday: new Date('2020-01-01'),
+          avatarUrl: 'pets/avatar/test',
+          favoriteFood: 'Chicken',
+          description: 'A friendly dog...'.padEnd(140, ' '),
+          price: 99.99
+        },
+        {
+          name: 'Whiskers',
+          species: 'Cat',
+          birthday: new Date('2021-01-01'),
+          avatarUrl: 'pets/avatar/test2',
+          favoriteFood: 'Tuna',
+          description: 'A cuddly cat...'.padEnd(140, ' '),
+          price: 49.99
+        }
+      ]);
+    });
+
+    it('should list ALL pets on / GET with JSON', (done) => {
+      chai.request(app)
+        .get('/')
+        .set('Accept', 'application/json')
+        .end((err, res) => {
+          should.not.exist(err);
+          res.should.have.status(200);
+          res.should.be.json;
+          res.body.should.be.a('object');
+          res.body.should.have.property('pets').that.is.an('array');
+          res.body.pets.length.should.be.above(0);
+          res.body.should.have.property('pagesCount').that.is.a('number');
+          res.body.should.have.property('currentPage').that.is.a('number');
+          done();
+        });
+    });
+
+    it('should handle pagination in JSON', (done) => {
+      chai.request(app)
+        .get('/?page=1')
+        .set('Accept', 'application/json')
+        .end((err, res) => {
+          should.not.exist(err);
+          res.should.have.status(200);
+          res.body.should.have.property('currentPage', 1);
+          done();
+        });
+    });
+  });
+
+  // API namespace tests
+  describe('API /api/pets', () => {
+    let petId;
+    before(async () => {
+      const pet = new Pet({
+        name: 'Test Pet',
+        species: 'Dog',
+        birthday: new Date('2020-01-01'),
+        avatarUrl: 'pets/avatar/test',
+        favoriteFood: 'Chicken',
+        description: 'A friendly dog...'.padEnd(140, ' '),
+        price: 99.99
+      });
+      await pet.save();
+      petId = pet._id;
+    });
+
+    it('should list pets on GET /api/pets', (done) => {
+      chai.request(app)
+        .get('/api/pets')
+        .end((err, res) => {
+          should.not.exist(err);
+          res.should.have.status(200);
+          res.body.should.have.property('pets').that.is.an('array');
+          done();
+        });
+    });
+
+    it('should get a pet on GET /api/pets/:id', (done) => {
+      chai.request(app)
+        .get(`/api/pets/${petId}`)
+        .end((err, res) => {
+          should.not.exist(err);
+          res.should.have.status(200);
+          res.body.should.have.property('name', 'Test Pet');
+          done();
+        });
+    });
+
+    it('should create a pet on POST /api/pets', (done) => {
+      chai.request(app)
+        .post('/api/pets')
+        .send({
+          name: 'New Pet',
+          species: 'Cat',
+          birthday: new Date('2021-01-01'),
+          avatarUrl: 'pets/avatar/new',
+          favoriteFood: 'Tuna',
+          description: 'A cuddly cat...'.padEnd(140, ' '),
+          price: 49.99
+        })
+        .end((err, res) => {
+          should.not.exist(err);
+          res.should.have.status(201);
+          res.body.should.have.property('name', 'New Pet');
+          done();
+        });
+    });
+  });
+
   // Test search route pagination
   it('should return paginated search results on /search GET', async () => {
     await createTestPet({ name: 'Poodle One', species: 'Poodle' });
